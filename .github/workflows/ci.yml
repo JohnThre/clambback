@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake curl libboost-program-options-dev libboost-system-dev libssl-dev netcat-openbsd openssl python3 rpm
+      - name: Configure
+        run: cmake -S . -B build -DENABLE_MYSQL=OFF -DSYSTEMD_SERVICE=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          cpack --config build/CPackConfig.cmake -G TGZ
+          cpack --config build/CPackConfig.cmake -G DEB
+          cpack --config build/CPackConfig.cmake -G RPM
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            build/*.tar.gz
+            build/*.deb
+            build/*.rpm
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install boost openssl@3
+      - name: Configure
+        run: cmake -S . -B build -DENABLE_MYSQL=OFF -DSYSTEMD_SERVICE=OFF -DDEFAULT_CONFIG="${HOMEBREW_PREFIX}/etc/clambback/config.json" -DCMAKE_PREFIX_PATH="$(brew --prefix boost);$(brew --prefix openssl@3)"
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Version
+        run: build/clambback --version

@@ -1,0 +1,71 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# Local config, keys, and certificates
+*.json
+!tests/**/*.json
+*.pem
+*.crt
+*.key
+
+# Prerequisites and compiled outputs
+*.d
+*.slo
+*.lo
+*.o
+*.obj
+*.gch
+*.pch
+*.so
+*.dylib
+*.dll
+*.mod
+*.smod
+*.lai
+*.la
+*.a
+*.lib
+*.exe
+*.out
+*.app
+clambback
+
+# CMake and CPack
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_CPack_Packages/
+*.deb
+*.rpm
+*.tar.gz
+*.tar.xz
+build/
+build-*/
+cmake-build-*/
+
+# Generated service files
+*.service
+
+# Local-only AI coding tool state
+.clambback-ai-history/
+.codex/
+.claude/
+.cursor/
+.windsurf/
+.continue/
+.aider*
+.copilot/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.github/copilot-instructions.md
+.github/instructions/
