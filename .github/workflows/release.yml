@@ -32,8 +32,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          prerelease_flags=()
+          case "$GITHUB_REF_NAME" in
+            *-alpha.*|*-beta.*|*-rc.*)
+              prerelease_flags+=(--prerelease --latest=false)
+              ;;
+          esac
+
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" build/*.tar.gz build/*.deb build/*.rpm --clobber
+            if [[ ${#prerelease_flags[@]} -gt 0 ]]; then
+              gh release edit "$GITHUB_REF_NAME" "${prerelease_flags[@]}"
+            fi
           else
-            gh release create "$GITHUB_REF_NAME" build/*.tar.gz build/*.deb build/*.rpm --generate-notes
+            gh release create "$GITHUB_REF_NAME" build/*.tar.gz build/*.deb build/*.rpm --generate-notes "${prerelease_flags[@]}"
           fi
