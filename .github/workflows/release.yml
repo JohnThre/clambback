@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build and publish"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,8 +17,12 @@ permissions:
 jobs:
   package-linux:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -28,22 +38,64 @@ jobs:
           cpack --config build/CPackConfig.cmake -G TGZ
           cpack --config build/CPackConfig.cmake -G DEB
           cpack --config build/CPackConfig.cmake -G RPM
+      - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$GPG_PRIVATE_KEY" ]]; then
+            echo "GPG_PRIVATE_KEY repository secret is required to sign release assets."
+            exit 1
+          fi
+
+          umask 077
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpgconf --kill gpg-agent
+      - name: Sign release assets
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          signing_key="$GPG_KEY_ID"
+          if [[ -z "$signing_key" ]]; then
+            signing_key="$(gpg --batch --list-secret-keys --with-colons --fingerprint | awk -F: '/^fpr:/ { print $10; exit }')"
+          fi
+          if [[ -z "$signing_key" ]]; then
+            echo "No GPG signing key is available after importing GPG_PRIVATE_KEY."
+            exit 1
+          fi
+
+          for asset in build/*.tar.gz build/*.deb build/*.rpm; do
+            gpg_args=(
+              --batch
+              --yes
+              --local-user "$signing_key"
+              --armor
+              --detach-sign
+            )
+            if [[ -n "$GPG_PASSPHRASE" ]]; then
+              gpg_args+=(--pinentry-mode loopback --passphrase "$GPG_PASSPHRASE")
+            fi
+            gpg "${gpg_args[@]}" "$asset"
+          done
       - name: Publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           prerelease_flags=()
-          case "$GITHUB_REF_NAME" in
+          case "$RELEASE_TAG" in
             *-alpha.*|*-beta.*|*-rc.*)
               prerelease_flags+=(--prerelease --latest=false)
               ;;
           esac
 
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" build/*.tar.gz build/*.deb build/*.rpm --clobber
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" build/*.tar.gz build/*.deb build/*.rpm build/*.asc --clobber
             if [[ ${#prerelease_flags[@]} -gt 0 ]]; then
-              gh release edit "$GITHUB_REF_NAME" "${prerelease_flags[@]}"
+              gh release edit "$RELEASE_TAG" "${prerelease_flags[@]}"
             fi
           else
-            gh release create "$GITHUB_REF_NAME" build/*.tar.gz build/*.deb build/*.rpm --generate-notes "${prerelease_flags[@]}"
+            gh release create "$RELEASE_TAG" build/*.tar.gz build/*.deb build/*.rpm build/*.asc --generate-notes "${prerelease_flags[@]}"
           fi
