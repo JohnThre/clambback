@@ -118,8 +118,12 @@ else()
     set(DEFAULT_CONFIG ${CMAKE_INSTALL_FULL_SYSCONFDIR}/clambback/config.json CACHE STRING "Default config path")
     target_compile_definitions(clambback PRIVATE DEFAULT_CONFIG="${DEFAULT_CONFIG}")
 
+    option(INSTALL_DEFAULT_CONFIG "Install the default config file" ON)
+
     install(TARGETS clambback RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(FILES examples/server.json-example DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/clambback RENAME config.json)
+    if(INSTALL_DEFAULT_CONFIG)
+        install(FILES examples/server.json-example DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/clambback RENAME config.json)
+    endif()
     install(FILES docs/clambback.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
     install(DIRECTORY examples/ DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples FILES_MATCHING PATTERN "*.json-example")
     install(FILES LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DOCDIR})
