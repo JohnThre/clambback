@@ -1,0 +1,23 @@
+active = "clambback"
+
+[traffic]
+enabled = false
+
+[[profile]]
+name = "clambback"
+
+  [profile.listen]
+  socks5 = "127.0.0.1:1080"
+
+  [[profile.chain]]
+  name = "default"
+
+    [[profile.chain.server]]
+    name = "clambback-server"
+    address = "example.com:443"
+    protocol = "clambback"
+
+      [profile.chain.server.settings]
+      password = "password1"
+      sni = "example.com"
+      # skip_cert_verify = true # only for private/self-signed test servers

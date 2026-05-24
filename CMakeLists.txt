@@ -125,7 +125,7 @@ else()
         install(FILES examples/server.json-example DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/clambback RENAME config.json)
     endif()
     install(FILES docs/clambback.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-    install(DIRECTORY examples/ DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples FILES_MATCHING PATTERN "*.json-example")
+    install(DIRECTORY examples/ DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples FILES_MATCHING PATTERN "*.json-example" PATTERN "*.toml-example")
     install(FILES LICENSE NOTICE DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
     if(SYSTEMD_SERVICE STREQUAL ON)
@@ -142,6 +142,9 @@ else()
     add_test(NAME LinuxSmokeTest-fake-client
              COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/LinuxSmokeTest/fake-client.sh ${CMAKE_CURRENT_BINARY_DIR}/clambback)
     set_tests_properties(LinuxSmokeTest-fake-client PROPERTIES DEPENDS "LinuxSmokeTest-basic")
+    add_test(NAME ClambhookCompatibility
+             COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/ClambhookCompat/clambhook-compat.sh ${CMAKE_CURRENT_BINARY_DIR}/clambback)
+    set_tests_properties(ClambhookCompatibility PROPERTIES SKIP_RETURN_CODE 77)
 endif()
 
 set(CPACK_PACKAGE_NAME clambback)
