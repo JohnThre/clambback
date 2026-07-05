@@ -141,7 +141,7 @@ void ClientSession::in_recv(const string &data) {
                 return;
             }
             bool has_method = false;
-            for (int i = 2; i < data[1] + 2; ++i) {
+            for (int i = 2; i < (unsigned char)data[1] + 2; ++i) {
                 if (data[i] == 0) {
                     has_method = true;
                     break;

@@ -113,6 +113,14 @@ void Config::populate(const ptree &tree) {
     mysql.ca = tree.get("mysql.ca", string());
 }
 
+static string required_env(const char *name) {
+    const char *value = getenv(name);
+    if (value == nullptr) {
+        throw runtime_error(string("SIP003 environment variable ") + name + " is not set");
+    }
+    return string(value);
+}
+
 bool Config::sip003() {
     char *JSON = getenv("SS_PLUGIN_OPTIONS");
     if (JSON == nullptr) {
@@ -121,17 +129,17 @@ bool Config::sip003() {
     populate(JSON);
     switch (run_type) {
         case SERVER:
-            local_addr = getenv("SS_REMOTE_HOST");
-            local_port = atoi(getenv("SS_REMOTE_PORT"));
+            local_addr = required_env("SS_REMOTE_HOST");
+            local_port = atoi(required_env("SS_REMOTE_PORT").c_str());
             break;
         case CLIENT:
         case NAT:
             throw runtime_error("SIP003 with wrong run_type");
         case FORWARD:
-            remote_addr = getenv("SS_REMOTE_HOST");
-            remote_port = atoi(getenv("SS_REMOTE_PORT"));
-            local_addr = getenv("SS_LOCAL_HOST");
-            local_port = atoi(getenv("SS_LOCAL_PORT"));
+            remote_addr = required_env("SS_REMOTE_HOST");
+            remote_port = atoi(required_env("SS_REMOTE_PORT").c_str());
+            local_addr = required_env("SS_LOCAL_HOST");
+            local_port = atoi(required_env("SS_LOCAL_PORT").c_str());
             break;
     }
     return true;
@@ -159,7 +167,7 @@ string Config::SHA224(const string &message) {
     }
 
     for (unsigned int i = 0; i < digest_len; ++i) {
-        sprintf(mdString + (i << 1), "%02x", (unsigned int)digest[i]);
+        snprintf(mdString + (i << 1), sizeof(mdString) - (i << 1), "%02x", (unsigned int)digest[i]);
     }
     mdString[digest_len << 1] = '\0';
     EVP_MD_CTX_free(ctx);

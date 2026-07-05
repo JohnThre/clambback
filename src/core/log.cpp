@@ -88,7 +88,7 @@ void Log::redirect_keylog(const string &filename) {
 }
 
 void Log::set_callback(LogCallback cb) {
-    log_callback = move(cb);
+    log_callback = std::move(cb);
 }
 
 void Log::reset() {
