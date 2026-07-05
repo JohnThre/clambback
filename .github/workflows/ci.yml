@@ -19,6 +19,8 @@ jobs:
             openssl-devel openssl rpm-build \
             curl nmap-ncat python3
       - uses: actions/checkout@v4
+      - name: Trust the checkout directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Configure
         run: cmake -S . -B build -DENABLE_MYSQL=OFF -DSYSTEMD_SERVICE=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
       - name: Build
