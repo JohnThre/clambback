@@ -21,7 +21,7 @@
         {
           default = pkgs.stdenv.mkDerivation {
             pname = "clambback";
-            version = "1.0.0-alpha.1";
+            version = "1.0.0-alpha.2";
             src = self;
 
             nativeBuildInputs = [ pkgs.cmake ];

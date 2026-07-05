@@ -9,7 +9,7 @@
 
 (package
   (name "clambback")
-  (version "1.0.0-alpha.1")
+  (version "1.0.0-alpha.2")
   (source (local-file "." "clambback-checkout" #:recursive? #t))
   (build-system cmake-build-system)
   (arguments
