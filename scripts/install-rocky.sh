@@ -94,7 +94,7 @@ if ! command -v dnf >/dev/null 2>&1; then
 fi
 
 log "installing build and test dependencies..."
-sudo dnf install -y \
+sudo dnf install -y --allowerasing \
     gcc-c++ \
     cmake \
     make \

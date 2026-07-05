@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          dnf install -y \
+          dnf install -y --allowerasing \
             gcc-c++ cmake make git \
             boost-devel boost-program-options boost-system \
             openssl-devel openssl rpm-build \
