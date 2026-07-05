@@ -15,18 +15,25 @@ permissions:
   contents: write
 
 jobs:
-  package-linux:
+  package-rocky:
     runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+            gcc-c++ cmake make git \
+            boost-devel boost-program-options boost-system \
+            openssl-devel openssl rpm-build \
+            curl nmap-ncat python3 gnupg2 ca-certificates 'dnf-command(config-manager)'
+          dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+          dnf install -y gh
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake curl libboost-program-options-dev libboost-system-dev libssl-dev netcat-openbsd openssl python3 rpm
       - name: Configure
         run: cmake -S . -B build -DENABLE_MYSQL=OFF -DSYSTEMD_SERVICE=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc
       - name: Build
@@ -36,7 +43,6 @@ jobs:
       - name: Package
         run: |
           cpack --config build/CPackConfig.cmake -G TGZ
-          cpack --config build/CPackConfig.cmake -G DEB
           cpack --config build/CPackConfig.cmake -G RPM
       - name: Import GPG signing key
         env:
@@ -67,7 +73,7 @@ jobs:
             exit 1
           fi
 
-          for asset in build/*.tar.gz build/*.deb build/*.rpm; do
+          for asset in build/*.tar.gz build/*.rpm; do
             gpg_args=(
               --batch
               --yes
@@ -92,10 +98,76 @@ jobs:
           esac
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" build/*.tar.gz build/*.deb build/*.rpm build/*.asc --clobber
+            gh release upload "$RELEASE_TAG" build/*.tar.gz build/*.rpm build/*.asc --clobber
             if [[ ${#prerelease_flags[@]} -gt 0 ]]; then
               gh release edit "$RELEASE_TAG" "${prerelease_flags[@]}"
             fi
           else
-            gh release create "$RELEASE_TAG" build/*.tar.gz build/*.deb build/*.rpm build/*.asc --generate-notes "${prerelease_flags[@]}"
+            gh release create "$RELEASE_TAG" build/*.tar.gz build/*.rpm build/*.asc --generate-notes "${prerelease_flags[@]}"
           fi
+
+  package-macos:
+    needs: package-rocky
+    runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - name: Install dependencies
+        run: brew install boost openssl@3
+      - name: Configure
+        run: cmake -S . -B build -DENABLE_MYSQL=OFF -DSYSTEMD_SERVICE=OFF -DCMAKE_PREFIX_PATH="$(brew --prefix boost);$(brew --prefix openssl@3)"
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        run: cpack --config build/CPackConfig.cmake -G TGZ
+      - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$GPG_PRIVATE_KEY" ]]; then
+            echo "GPG_PRIVATE_KEY repository secret is required to sign release assets."
+            exit 1
+          fi
+
+          umask 077
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpgconf --kill gpg-agent
+      - name: Sign release assets
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          signing_key="$GPG_KEY_ID"
+          if [[ -z "$signing_key" ]]; then
+            signing_key="$(gpg --batch --list-secret-keys --with-colons --fingerprint | awk -F: '/^fpr:/ { print $10; exit }')"
+          fi
+          if [[ -z "$signing_key" ]]; then
+            echo "No GPG signing key is available after importing GPG_PRIVATE_KEY."
+            exit 1
+          fi
+
+          for asset in build/*.tar.gz; do
+            gpg_args=(
+              --batch
+              --yes
+              --local-user "$signing_key"
+              --armor
+              --detach-sign
+            )
+            if [[ -n "$GPG_PASSPHRASE" ]]; then
+              gpg_args+=(--pinentry-mode loopback --passphrase "$GPG_PASSPHRASE")
+            fi
+            gpg "${gpg_args[@]}" "$asset"
+          done
+      - name: Publish release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$RELEASE_TAG" build/*.tar.gz build/*.asc --clobber
