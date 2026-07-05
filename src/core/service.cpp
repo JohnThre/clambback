@@ -22,10 +22,6 @@
 #include <cerrno>
 #include <stdexcept>
 #include <fstream>
-#ifdef _WIN32
-#include <wincrypt.h>
-#include <tchar.h>
-#endif // _WIN32
 #ifdef __APPLE__
 #include <Security/Security.h>
 #endif // __APPLE__
@@ -136,22 +132,6 @@ Service::Service(Config &config, bool test) :
             ssl_context.set_verify_mode(verify_peer);
             if (config.ssl.cert.empty()) {
                 ssl_context.set_default_verify_paths();
-#ifdef _WIN32
-                HCERTSTORE h_store = CertOpenSystemStore(0, _T("ROOT"));
-                if (h_store) {
-                    X509_STORE *store = SSL_CTX_get_cert_store(native_context);
-                    PCCERT_CONTEXT p_context = NULL;
-                    while ((p_context = CertEnumCertificatesInStore(h_store, p_context))) {
-                        const unsigned char *encoded_cert = p_context->pbCertEncoded;
-                        X509 *x509 = d2i_X509(NULL, &encoded_cert, p_context->cbCertEncoded);
-                        if (x509) {
-                            X509_STORE_add_cert(store, x509);
-                            X509_free(x509);
-                        }
-                    }
-                    CertCloseStore(h_store, 0);
-                }
-#endif // _WIN32
 #ifdef __APPLE__
                 SecKeychainSearchRef pSecKeychainSearch = NULL;
                 SecKeychainRef pSecKeychain;

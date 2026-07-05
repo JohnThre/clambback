@@ -47,7 +47,6 @@ void signal_async_wait(signal_set &sig, Service &service, bool &restart) {
             case SIGTERM:
                 service.stop();
                 break;
-#ifndef _WIN32
             case SIGHUP:
                 restart = true;
                 service.stop();
@@ -56,7 +55,6 @@ void signal_async_wait(signal_set &sig, Service &service, bool &restart) {
                 service.reload_cert();
                 signal_async_wait(sig, service, restart);
                 break;
-#endif // _WIN32
         }
     });
 }
@@ -154,10 +152,8 @@ int main(int argc, const char *argv[]) {
             signal_set sig(service.service());
             sig.add(SIGINT);
             sig.add(SIGTERM);
-#ifndef _WIN32
             sig.add(SIGHUP);
             sig.add(SIGUSR1);
-#endif // _WIN32
             signal_async_wait(sig, service, restart);
             service.run();
             if (restart) {

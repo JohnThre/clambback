@@ -24,9 +24,6 @@
 #include <sstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
-#ifdef ENABLE_ANDROID_LOG
-#include <android/log.h>
-#endif // ENABLE_ANDROID_LOG
 using namespace std;
 using namespace boost::posix_time;
 using namespace boost::asio::ip;
@@ -38,13 +35,8 @@ Log::LogCallback Log::log_callback{};
 
 void Log::log(const string &message, Level level) {
     if (level >= Log::level) {
-#ifdef ENABLE_ANDROID_LOG
-        __android_log_print(ANDROID_LOG_ERROR, "clambback", "%s\n",
-                            message.c_str());
-#else
         fprintf(output_stream, "%s\n", message.c_str());
         fflush(output_stream);
-#endif // ENABLE_ANDROID_LOG
         if (log_callback) {
             log_callback(message, level);
         }
