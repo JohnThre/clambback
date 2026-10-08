@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <a href="https://clambcloud.com">clambcloud.com</a> · <a href="https://swiphtgroup.com">swiphtgroup.com</a>
+</p>
+
+<p align="center">
   <a href="https://nowpayments.io/donation?api_key=4f798f1e-c93e-456e-8067-b03b200790cd" target="_blank" rel="noreferrer noopener">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://nowpayments.io/images/embeds/donation-button-white.svg">
