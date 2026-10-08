@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="assets/brand/clambback-official-logo.png" alt="clambback official logo" width="520">
+  <img src="assets/brand/clambback-squircle.svg" alt="clambback app icon" width="160">
 </p>
+
+<h1 align="center">clambback</h1>
 
 <p align="center">
   <strong>Configurable TLS transport service.</strong>
