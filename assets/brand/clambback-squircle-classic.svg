@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ClambBack icon">
+  <defs>
+    <linearGradient id="cb-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7faff"/>
+      <stop offset="1" stop-color="#e2ecfd"/>
+    </linearGradient>
+    <linearGradient id="cb-body" x1="0" y1="40" x2="0" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4b5b73"/>
+      <stop offset="1" stop-color="#1f2734"/>
+    </linearGradient>
+    <linearGradient id="cb-pocket" x1="0" y1="64" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6b7c96"/>
+      <stop offset="1" stop-color="#37425a"/>
+    </linearGradient>
+    <clipPath id="cb-pocketclip">
+      <rect x="48" y="66" width="32" height="33" rx="9"/>
+    </clipPath>
+    <filter id="cb-shadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.6" flood-color="#1e293b" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <rect width="128" height="128" rx="26" fill="url(#cb-bg)"/>
+
+  <g filter="url(#cb-shadow)">
+    <!-- grab handle -->
+    <path d="M57 46 v-7 a7 7 0 0 1 14 0 v7" fill="none" stroke="#3a4356" stroke-width="5" stroke-linecap="round"/>
+    <!-- shoulder straps -->
+    <path d="M49 54 C40 64 39 86 45 102" fill="none" stroke="#3a4356" stroke-width="8" stroke-linecap="round"/>
+    <path d="M79 54 C88 64 89 86 83 102" fill="none" stroke="#3a4356" stroke-width="8" stroke-linecap="round"/>
+    <!-- body -->
+    <rect x="40" y="44" width="48" height="62" rx="15" fill="url(#cb-body)"/>
+    <!-- gloss -->
+    <rect x="44" y="48" width="40" height="20" rx="11" fill="#ffffff" opacity="0.10"/>
+    <!-- top buckle -->
+    <rect x="60" y="46" width="8" height="13" rx="2" fill="#e11d2f"/>
+    <!-- front pocket -->
+    <rect x="48" y="66" width="32" height="33" rx="9" fill="url(#cb-pocket)"/>
+    <g clip-path="url(#cb-pocketclip)">
+      <!-- mountain -->
+      <path d="M50 99 L60 78 L66 88 L72 73 L80 99 Z" fill="#eef2f7"/>
+      <!-- red summit trail -->
+      <path d="M55 95 L64 86 L71 77" fill="none" stroke="#e11d2f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="55" cy="95" r="2.6" fill="#ffffff" stroke="#e11d2f" stroke-width="1.6"/>
+      <circle cx="71" cy="77" r="2.6" fill="#ffffff" stroke="#e11d2f" stroke-width="1.6"/>
+    </g>
+    <!-- side buckles -->
+    <rect x="36" y="74" width="6" height="11" rx="2" fill="#3a4356"/>
+    <rect x="86" y="74" width="6" height="11" rx="2" fill="#3a4356"/>
+  </g>
+</svg>
